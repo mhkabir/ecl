@@ -479,8 +479,8 @@ void EstimatorInterface::setAuxVelData(uint64_t time_usec, float (&data)[2], flo
 		auxvel_sample_new.time_us -= FILTER_UPDATE_PERIOD_MS * 1000 / 2;
 		_time_last_auxvel = time_usec;
 
-		auxvel_sample_new.velNE = Vector2f(data);
-		auxvel_sample_new.velVarNE = Vector2f(variance);
+		auxvel_sample_new.velXY = Vector2f(data);
+		auxvel_sample_new.velVarXY = Vector2f(variance);
 
 		_auxvel_buffer.push(auxvel_sample_new);
 	}

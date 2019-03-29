@@ -1624,6 +1624,7 @@ void Ekf::controlVelPosFusion()
 
 	if (!_control_status.flags.gps &&
 	    !_control_status.flags.opt_flow &&
+	    !_control_status.flags.aux_vel &&
 	    !_control_status.flags.ev_pos &&
 	    !(_control_status.flags.fuse_aspd && _control_status.flags.fuse_beta)) {
 
@@ -1681,15 +1682,37 @@ void Ekf::controlVelPosFusion()
 void Ekf::controlAuxVelFusion()
 {
 	bool data_ready = _auxvel_buffer.pop_first_older_than(_imu_sample_delayed.time_us, &_auxvel_sample_delayed);
-	bool primary_aiding = _control_status.flags.gps || _control_status.flags.ev_pos || _control_status.flags.opt_flow;
 
-	if (data_ready && primary_aiding) {
-		_fuse_hor_vel = _fuse_vert_vel = _fuse_pos = _fuse_height = false;
-		_fuse_hor_vel_aux = true;
-		_aux_vel_innov[0] = _state.vel(0) - _auxvel_sample_delayed.velNE(0);
-		_aux_vel_innov[1] = _state.vel(1) - _auxvel_sample_delayed.velNE(1);
-		_velObsVarNE = _auxvel_sample_delayed.velVarNE;
-		_hvelInnovGate = _params.auxvel_gate;
-		fuseVelPosHeight();
+	if (data_ready) {
+
+		if (!_control_status.flags.aux_vel) {
+			_control_status.flags.aux_vel = true;
+			ECL_INFO("EKF commencing auxiliary velocity fusion");
+		}
+
+		if (_control_status.flags.aux_vel) {
+			// get rotation matrix from earth to body
+			Dcmf earth_to_body(_state.quat_nominal);
+
+			// Rotate from body to NE frame
+			Vector3f velXY(_auxvel_sample_delayed.velXY(0), _auxvel_sample_delayed.velXY(1), 0.0f);
+			Vector3f velNE = earth_to_body * velXY;
+
+			_aux_vel_innov[0] = _state.vel(0) - velNE(0);
+			_aux_vel_innov[1] = _state.vel(1) - velNE(1);
+			_velObsVarNE = _auxvel_sample_delayed.velVarXY;
+			_hvelInnovGate = _params.auxvel_gate;
+
+			_fuse_hor_vel = _fuse_vert_vel = _fuse_pos = _fuse_height = false;
+			_fuse_hor_vel_aux = true;
+			fuseVelPosHeight();
+		}
+
+	} else if (_control_status.flags.aux_vel && (_imu_sample_delayed.time_us - _auxvel_sample_delayed.time_us > (uint64_t)1e6)) {
+
+		// Turn off fusion if no data has been received
+		_control_status.flags.aux_vel = false;
+		ECL_INFO("EKF Auxiliary Velocity Stopped");
+
 	}
 }
