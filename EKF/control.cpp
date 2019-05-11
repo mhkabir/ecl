@@ -1691,12 +1691,16 @@ void Ekf::controlAuxVelFusion()
 		}
 
 		if (_control_status.flags.aux_vel) {
-			// get rotation matrix from earth to body
-			Dcmf earth_to_body(_state.quat_nominal);
+
+			// correct velocity for offset relative to IMU
+			Vector3f velXY(_auxvel_sample_delayed.velXY(0), _auxvel_sample_delayed.velXY(1), 0.0f);
+			Vector3f ang_rate = _imu_sample_delayed.delta_ang * (1.0f / _imu_sample_delayed.delta_ang_dt);
+			Vector3f pos_offset_body = _params.auxvel_pos_body - _params.imu_pos_body;
+			Vector3f vel_offset_body = cross_product(ang_rate, pos_offset_body);
+			velXY -= vel_offset_body;
 
 			// Rotate from body to NE frame
-			Vector3f velXY(_auxvel_sample_delayed.velXY(0), _auxvel_sample_delayed.velXY(1), 0.0f);
-			Vector3f velNE = earth_to_body * velXY;
+			Vector3f velNE = _R_to_earth * velXY;
 
 			_aux_vel_innov[0] = _state.vel(0) - velNE(0);
 			_aux_vel_innov[1] = _state.vel(1) - velNE(1);

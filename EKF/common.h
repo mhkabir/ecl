@@ -319,6 +319,7 @@ struct parameters {
 	Vector3f rng_pos_body;			///< xyz position of range sensor in body frame (m)
 	Vector3f flow_pos_body;			///< xyz position of range sensor focal point in body frame (m)
 	Vector3f ev_pos_body;			///< xyz position of VI-sensor focal point in body frame (m)
+	Vector3f auxvel_pos_body;		///< xyz position of velocity measurement point in body frame (m)
 
 	// output complementary filter tuning
 	float vel_Tau{0.25f};			///< velocity state correction time constant (1/sec)
