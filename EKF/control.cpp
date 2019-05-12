@@ -321,7 +321,7 @@ void Ekf::controlExternalVisionFusion()
 				// check if we have been deadreckoning too long
 				if ((_time_last_imu - _time_last_pos_fuse) > _params.reset_timeout_max) {
 					// don't reset velocity if we have another source of aiding constraining it
-					if ((_time_last_imu - _time_last_of_fuse) > (uint64_t)1E6) {
+					if ((_time_last_imu - _time_last_of_fuse) > (uint64_t)1E6) { // TODO : add wheel odometry
 						resetVelocity();
 					}
 
@@ -1708,7 +1708,7 @@ void Ekf::controlAuxVelFusion()
 
 			_aux_vel_innov[0] = _state.vel(0) - velNE(0);
 			_aux_vel_innov[1] = _state.vel(1) - velNE(1);
-			_velObsVarNE = _auxvel_sample_delayed.velVarXY;
+			_velObsVar = _auxvel_sample_delayed.velVarXY;
 			_hvelInnovGate = _params.auxvel_gate;
 
 			_fuse_hor_vel = _fuse_vert_vel = _fuse_pos = _fuse_height = false;
