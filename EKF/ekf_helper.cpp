@@ -149,11 +149,12 @@ bool Ekf::resetPosition()
 
 	} else if (_control_status.flags.ev_pos) {
 		// this reset is only called if we have new ev data at the fusion time horizon
-		_state.pos(0) = _ev_sample_delayed.posNED(0);
-		_state.pos(1) = _ev_sample_delayed.posNED(1);
+		_state.pos(0) = _ev_sample_delayed.pos(0);
+		_state.pos(1) = _ev_sample_delayed.pos(1);
 
 		// use EV accuracy to reset variances
-		setDiag(P, 7, 8, sq(_ev_sample_delayed.posErr));
+		setDiag(P, 7, 7, sq(_ev_sample_delayed.posErr(0)));
+		setDiag(P, 8, 8, sq(_ev_sample_delayed.posErr(1)));
 
 	} else if (_control_status.flags.opt_flow) {
 		if (!_control_status.flags.in_air) {
@@ -297,10 +298,10 @@ void Ekf::resetHeight()
 		vert_pos_reset = true;
 
 		if (std::abs(dt_newest) < std::abs(dt_delayed)) {
-			_state.pos(2) = ev_newest.posNED(2);
+			_state.pos(2) = ev_newest.pos(2);
 
 		} else {
-			_state.pos(2) = _ev_sample_delayed.posNED(2);
+			_state.pos(2) = _ev_sample_delayed.pos(2);
 		}
 
 	}
@@ -740,7 +741,7 @@ bool Ekf::resetMagHeading(Vector3f &mag_init, bool increase_yaw_var, bool update
 		// update the yaw angle variance using the variance of the measurement
 		if (_control_status.flags.ev_yaw) {
 			// using error estimate from external vision data
-			increaseQuatYawErrVariance(sq(fmaxf(_ev_sample_delayed.angErr, 1.0e-2f)));
+			increaseQuatYawErrVariance(sq(fmaxf(_ev_sample_delayed.yawErr, 1.0e-2f)));
 		} else if (_params.mag_fusion_type <= MAG_FUSE_TYPE_AUTOFW) {
 			// using magnetic heading tuning parameter
 			increaseQuatYawErrVariance(sq(fmaxf(_params.mag_heading_noise, 1.0e-2f)));

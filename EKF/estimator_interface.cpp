@@ -439,11 +439,10 @@ void EstimatorInterface::setExtVisionData(uint64_t time_usec, ext_vision_message
 		ev_sample_new.time_us = time_usec - _params.ev_delay_ms * 1000;
 
 		// copy required data
-		ev_sample_new.angErr = evdata->angErr;
-		ev_sample_new.posErr = evdata->posErr;
-		ev_sample_new.hgtErr = evdata->hgtErr;
+		ev_sample_new.pos = evdata->pos;
 		ev_sample_new.quat = evdata->quat;
-		ev_sample_new.posNED = evdata->posNED;
+		ev_sample_new.posErr = evdata->posErr;
+		ev_sample_new.yawErr = evdata->yawErr;
 
 		// record time for comparison next measurement
 		_time_last_ext_vision = time_usec;

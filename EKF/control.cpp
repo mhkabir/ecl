@@ -215,7 +215,7 @@ void Ekf::controlExternalVisionFusion()
 				uncorrelateQuatStates();
 
 				// adjust the quaternion covariances estimated yaw error
-				increaseQuatYawErrVariance(sq(fmaxf(_ev_sample_delayed.angErr, 1.0e-2f)));
+				increaseQuatYawErrVariance(sq(fmaxf(_ev_sample_delayed.yawErr, 1.0e-2f)));
 
 				// calculate the amount that the quaternion has changed by
 				_state_reset_status.quat_change = quat_before_reset.inversed() * _state.quat_nominal;
@@ -272,9 +272,9 @@ void Ekf::controlExternalVisionFusion()
 			// correct position and height for offset relative to IMU
 			Vector3f pos_offset_body = _params.ev_pos_body - _params.imu_pos_body;
 			Vector3f pos_offset_earth = _R_to_earth * pos_offset_body;
-			_ev_sample_delayed.posNED(0) -= pos_offset_earth(0);
-			_ev_sample_delayed.posNED(1) -= pos_offset_earth(1);
-			_ev_sample_delayed.posNED(2) -= pos_offset_earth(2);
+			_ev_sample_delayed.pos(0) -= pos_offset_earth(0);
+			_ev_sample_delayed.pos(1) -= pos_offset_earth(1);
+			_ev_sample_delayed.pos(2) -= pos_offset_earth(2);
 
 			// Use an incremental position fusion method for EV data if using GPS or if the observations are not in NED
 			if (_control_status.flags.gps || (_params.fusion_mode & MASK_ROTATE_EV)) {
@@ -292,7 +292,7 @@ void Ekf::controlExternalVisionFusion()
 
 				} else {
 					// calculate the change in position since the last measurement
-					Vector3f ev_delta_pos = _ev_sample_delayed.posNED - _pos_meas_prev;
+					Vector3f ev_delta_pos = _ev_sample_delayed.pos - _pos_meas_prev;
 
 					// rotate measurement into body frame if required
 					if (_params.fusion_mode & MASK_ROTATE_EV) {
@@ -306,14 +306,14 @@ void Ekf::controlExternalVisionFusion()
 				}
 
 				// record observation and estimate for use next time
-				_pos_meas_prev = _ev_sample_delayed.posNED;
+				_pos_meas_prev = _ev_sample_delayed.pos;
 				_hpos_pred_prev(0) = _state.pos(0);
 				_hpos_pred_prev(1) = _state.pos(1);
 
 			} else {
 				// use the absolute position
-				_vel_pos_innov[3] = _state.pos(0) - _ev_sample_delayed.posNED(0);
-				_vel_pos_innov[4] = _state.pos(1) - _ev_sample_delayed.posNED(1);
+				_vel_pos_innov[3] = _state.pos(0) - _ev_sample_delayed.pos(0);
+				_vel_pos_innov[4] = _state.pos(1) - _ev_sample_delayed.pos(1);
 
 				// check if we have been deadreckoning too long
 				if ((_time_last_imu - _time_last_pos_fuse) > _params.reset_timeout_max) {
