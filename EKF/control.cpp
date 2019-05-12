@@ -294,9 +294,12 @@ void Ekf::controlExternalVisionFusion()
 					// calculate the change in position since the last measurement
 					Vector3f ev_delta_pos = _ev_sample_delayed.pos - _pos_meas_prev;
 
-					// rotate measurement into body frame if required
+					// Rotate into NED frame if required
 					if (_params.fusion_mode & MASK_ROTATE_EV) {
+						// Rotate measurement
 						ev_delta_pos = _ev_rot_mat * ev_delta_pos;
+						// Rotate error estimate
+						_ev_sample_delayed.posErr = _ev_rot_mat * _ev_sample_delayed.posErr;
 					}
 
 					// use the change in position since the last measurement
