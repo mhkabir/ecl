@@ -326,11 +326,12 @@ void Ekf::controlExternalVisionFusion()
 				}
 			}
 
-			// observation 1-STD error
-			_posObsNoiseNE = fmaxf(_ev_sample_delayed.posErr, 0.01f);
+			// XY position observation variance
+			_posObsVar(0) = sq(fmaxf(_ev_sample_delayed.posErr(0), 0.01f));
+			_posObsVar(1) = sq(fmaxf(_ev_sample_delayed.posErr(1), 0.01f));
 
 			// innovation gate size
-			_posInnovGateNE = fmaxf(_params.ev_innov_gate, 1.0f);
+			_hposInnovGate = fmaxf(_params.ev_innov_gate, 1.0f);
 		}
 
 		// Fuse available NED position data into the main filter
@@ -662,16 +663,16 @@ void Ekf::controlGpsFusion()
 			if (_control_status.flags.opt_flow || _control_status.flags.ev_pos) {
 				// if we are using other sources of aiding, then relax the upper observation
 				// noise limit which prevents bad GPS perturbing the position estimate
-				_posObsNoiseNE = fmaxf(_gps_sample_delayed.hacc, lower_limit);
+				_posObsVar(1) = _posObsVar(0) = sq(fmaxf(_gps_sample_delayed.hacc, lower_limit));
 
 			} else {
 				// if we are not using another source of aiding, then we are reliant on the GPS
 				// observations to constrain attitude errors and must limit the observation noise value.
 				float upper_limit = fmaxf(_params.pos_noaid_noise, lower_limit);
-				_posObsNoiseNE = math::constrain(_gps_sample_delayed.hacc, lower_limit, upper_limit);
+				_posObsVar(1) = _posObsVar(0) = sq(math::constrain(_gps_sample_delayed.hacc, lower_limit, upper_limit));
 			}
 
-			_velObsVarNE(1) = _velObsVarNE(0) = sq(fmaxf(_gps_sample_delayed.sacc, _params.gps_vel_noise));
+			_velObsVar(1) = _velObsVar(0) = sq(fmaxf(_gps_sample_delayed.sacc, _params.gps_vel_noise));
 
 			// calculate innovations
 			_vel_pos_innov[0] = _state.vel(0) - _gps_sample_delayed.vel(0);
@@ -681,7 +682,7 @@ void Ekf::controlGpsFusion()
 			_vel_pos_innov[4] = _state.pos(1) - _gps_sample_delayed.pos(1);
 
 			// set innovation gate size
-			_posInnovGateNE = fmaxf(_params.posNE_innov_gate, 1.0f);
+			_hposInnovGate = fmaxf(_params.posNE_innov_gate, 1.0f);
 			_hvelInnovGate = fmaxf(_params.vel_innov_gate, 1.0f);
 		}
 
@@ -1651,10 +1652,10 @@ void Ekf::controlVelPosFusion()
 			_time_last_fake_gps = _time_last_imu;
 
 			if (_control_status.flags.in_air && _control_status.flags.tilt_align) {
-				_posObsNoiseNE = fmaxf(_params.pos_noaid_noise, _params.gps_pos_noise);
+				_posObsVar(1) = _posObsVar(0) = sq(fmaxf(_params.pos_noaid_noise, _params.gps_pos_noise));
 
 			} else {
-				_posObsNoiseNE = 0.5f;
+				_posObsVar(1) = _posObsVar(0) = 0.25f;
 			}
 
 			_vel_pos_innov[0] = 0.0f;
@@ -1664,7 +1665,7 @@ void Ekf::controlVelPosFusion()
 			_vel_pos_innov[4] = _state.pos(1) - _last_known_posNE(1);
 
 			// glitch protection is not required so set gate to a large value
-			_posInnovGateNE = 100.0f;
+			_hposInnovGate = 100.0f;
 
 		}
 

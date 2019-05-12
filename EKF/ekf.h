@@ -292,10 +292,10 @@ private:
 	bool _fuse_vert_vel{false};	///< true when gps vertical velocity measurement should be fused
 	bool _fuse_hor_vel_aux{false};	///< true when auxiliary horizontal velocity measurement should be fused
 
-	float _posObsNoiseNE{0.0f};		///< 1-STD observation noise used for the fusion of NE position data (m)
-	float _posInnovGateNE{1.0f};		///< Number of standard deviations used for the NE position fusion innovation consistency check
+	Vector2f _posObsVar;		///< Observation noise variance used for the fusion of NE position data (m)**2
+	float _hposInnovGate{1.0f};		///< Number of standard deviations used for the NE position fusion innovation consistency check
 
-	Vector2f _velObsVarNE;		///< 1-STD observation noise variance used for the fusion of NE velocity data (m/sec)**2
+	Vector2f _velObsVar;		///< Observation noise variance used for the fusion of NE velocity data (m/sec)**2
 	float _hvelInnovGate{1.0f};		///< Number of standard deviations used for the horizontal velocity fusion innovation consistency check
 
 	// variables used when position data is being fused using a relative position odometry model

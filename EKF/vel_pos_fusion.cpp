@@ -66,9 +66,9 @@ void Ekf::fuseVelPosHeight()
 			innovation[1] = _aux_vel_innov[1];
 		}
 
-		// Set observation noise variance and innovation consistency check gate size for the NE position observations
-		R[0] = _velObsVarNE(0);
-		R[1] = _velObsVarNE(1);
+		// Set observation noise variance and innovation consistency check gate size for the NE velocity observations
+		R[0] = _velObsVar(0);
+		R[1] = _velObsVar(1);
 		gate_size[1] = gate_size[0] = _hvelInnovGate;
 
 	}
@@ -89,8 +89,9 @@ void Ekf::fuseVelPosHeight()
 		fuse_map[3] = fuse_map[4] = true;
 
 		// Set observation noise variance and innovation consistency check gate size for the NE position observations
-		R[4] = R[3] = sq(_posObsNoiseNE);
-		gate_size[4] = gate_size[3] = _posInnovGateNE;
+		R[3] = _posObsVar(0);
+		R[4] = _posObsVar(1);
+		gate_size[4] = gate_size[3] = _hposInnovGate;
 
 	}
 
